@@ -6,7 +6,6 @@
 
 const router       = require('koa-router')(); // router middleware for koa
 const Client       = require('../../models/client.js');
-const castBoolean  = require('../cast-boolean.js');
 const moment       = require('moment');
 
 router.get('/clients', function*() {
