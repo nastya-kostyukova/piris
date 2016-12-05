@@ -1,0 +1,78 @@
+<div class="col-md-8 col-md-offset-2">
+  <form method="post" id="addCredit" class="form-horizontal">
+      <input type="hidden" name = "id" value={{agreement.id}}>
+          <div class="form-group">
+              <label class="col-sm-3">Клиент: *</label>
+              <div class="col-sm-9">
+                  <select class="form-control" placeholder="Клиент" name="client" required="required" >
+                    {{#each clients}}
+                      {{#if this.selected}}
+                          <option value="{{this.idclient}}" selected>{{this.surname}} {{this.name}}</option>
+                      {{else}}
+                          <option value="{{this.idclient}}">{{this.surname}} {{this.name}}</option>
+                      {{/if}}
+                    {{/each}}
+                  </select>
+              </div>
+          </div>
+          <div class="form-group">
+              <label class="col-sm-3">Вид кредита: *</label>
+              <div class="col-sm-9">
+                  <select class="form-control" placeholder="Вид кредита" name="credit_types" required="required" >
+                    {{#each credit_types}}
+                      {{#if this.selected}}
+                          <option value="{{this.id}}" selected>{{this.name}}</option>
+                      {{else}}
+                          <option value="{{this.id}}">{{this.name}}</option>
+                      {{/if}}
+                    {{/each}}
+                  </select>
+              </div>
+          </div>
+          <div class="form-group">
+              <label class="col-sm-3">Номер договора: *</label>
+              <div class="col-sm-9">
+                  <input class="form-control" type="text" placeholder="Номер договора" name="agreement_number" value="{{agreement.agreement_number}}" minlength="9" maxlength="13" pattern="[a-zA-Z0-9]*" required/>
+              </div>
+          </div>
+          <div class="form-group">
+              <label class="col-sm-3">Дата начала кредитной программы: *</label>
+              <div class="col-sm-9">
+                  <input class="form-control" type="date" id="date3" style="padding-top:5; padding-bottom:5" value="{{agreement.start}}" name="start" required="required"/>
+              </div>
+          </div>
+          <div class="form-group">
+              <label class="col-sm-3">Дата конца кредитной программы: *</label>
+              <div class="col-sm-9">
+                  <input class="form-control" type="date" id="date4" style="padding-top:5; padding-bottom:5" name="end" value="{{agreement.end}}" required="required"/>
+              </div>
+          </div>
+          <div class="form-group">
+              <label class="col-sm-3">Сумма: </label>
+              <div class="col-sm-6">
+                  <input class="form-control" type="number" name="init_sum" value="{{client.monthly_income}}" />
+              </div>
+              <div class="col-sm-3">
+                  <select class="form-control" name="currency" required="required" >
+                    {{#each currencies}}
+                      {{#if this.selected}}
+                          <option value="{{this.id}}" selected>{{this.name}}</option>
+                      {{else}}
+                          <option value="{{this.id}}">{{this.name}}</option>
+                      {{/if}}
+                    {{/each}}
+                  </select>
+              </div>
+          </div>
+
+          <div id="success">
+          </div>
+          <div id="error">
+          </div>
+          <div class="form-group">
+              <div class="col-sm-9 col-sm-offset-3">
+                  <button type="submit" id="add" style="margin: 5px auto 0 auto" class="btn btn-info btn-lg">Сохранить</button>
+              </div>
+          </div>
+      </form>
+</div>
