@@ -1,0 +1,60 @@
+<table class="table table-bordered table-hover "
+       style="overflow: scroll; font-size: 13px; margin-top: 70px;">
+    <thead>
+        <tr>
+            <th>ФИО</th>
+            <th>Дата Рождения</th>
+            <th>Пол</th>
+            <th>Данные паспорта</th>
+            <th>Место рождения</th>
+            <th>Город</th>
+            <th>Адрес проживания</th>
+            <th>Контакты</th>
+            <th>Адрес прописки</th>
+            <th>Семейное полож.</th>
+            <th>Гражданство</th>
+            <th>Инвалид- ность</th>
+            <th>Пенсионер</th>
+            <th>Доход</th>
+            <th></th>
+        </tr>
+    </thead>
+    <tbody>
+        {{#each clients}}
+        <tr>
+            <td>{{this.surname}} {{this.name}} {{this.patronymic}}</td>
+            <td>{{this.birthdate}}</td>
+            <td>{{this.sex}}</td>
+            <td><span>Серия, номер:</span> {{this.passport_series}}{{this.passport_no}}<br/>
+                    <span>Выдан:</span> {{this.passport_issuer}}<br/>
+                    <span>Дата выдачи:</span> {{this.passport_issue_date}}<br/>
+                    <span>Идентиф.номер:</span> {{this.passport_id}}<br/>
+            <td>{{this.birthplace}}</td>
+            <td>{{this.city_name}}</td>
+            <td>{{this.address}}</td>
+            <td><span>Дом.тел.</span> {{#if this.home_phonenumber}}{{this.home_phonenumber}}{{else}}<i class="fa fa-minus" aria-hidden="true"></i>{{/if}} <br>
+              <span>Моб.тел.</span> {{#if this.mobile_phonenumber}}{{this.mobile_phonenumber}}{{else}}<i class="fa fa-minus" aria-hidden="true"></i>{{/if}} <br>
+              <span>Email</span> {{#if this.email}}{{this.email}}{{else}}<i class="fa fa-minus" aria-hidden="true"></i>{{/if}}
+            </td>
+            <td>{{this.residence}}</td>
+            <td>{{this.martial_status_name}}</td>
+            <td>{{this.citizenship_name}}</td>
+            <td>{{this.disability_name}}</td>
+            <td>
+              {{#if this.pensioner}}Да{{else}}Нет{{/if}}
+            </td>
+            <td>{{#if this.monthly_income}}{{this.monthly_income}}{{else}}<i class="fa fa-minus" aria-hidden="true"></i>{{/if}}</td>
+            <td>
+                <a class="btn btn-success" href="/clients/add/?id={{this.idclient}}" style="margin-bottom: 5px; color: white; float:left">
+                    <i class="fa fa-pencil" aria-hidden="true"></i>
+                </a>
+                <form method="post" action="/clients/delete" style="margin-bottom: 0">
+                    <input type="hidden" name = "id" value={{this.idclient}}>
+                    <button type="submit" class="btn btn-danger" style="color: white">
+                      <i class="fa fa-trash" aria-hidden="true"></i>
+                    </button>
+                </form>
+            </td>
+        </tr>
+        {{/each}}
+    </tb

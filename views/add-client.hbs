@@ -1,0 +1,190 @@
+<div class="col-md-8 col-md-offset-2">
+  <form name="addClient" id="add" method="post" modelAttribute="client" class="form-horizontal">
+      <input type="hidden" name = "id" value={{client.idclient}}>
+
+          <div class="form-group">
+              <label class="col-sm-3">Фамилия: *</label>
+              <div class="col-sm-9">
+                  <input type="text" class="form-control" placeholder="Фамилия" name="surname" value="{{client.surname}}" required="required" pattern="[a-zA-Zа-яА-Я]+" maxlength="90"/>
+              </div>
+          </div>
+          <div class="form-group">
+              <label class="col-sm-3">Имя: *</label>
+              <div class="col-sm-9">
+                  <input type="text" class="form-control" placeholder="Имя" name="name" value="{{client.name}}" required="required" pattern="[a-zA-Zа-яА-Я]+" maxlength="90"/>
+              </div>
+          </div>
+          <div class="form-group">
+              <label class="col-sm-3">Отчество: *</label>
+              <div class="col-sm-9">
+                  <input class="form-control" type="text" placeholder="Отчество" name="patronymic" value="{{client.patronymic}}" required="required" pattern="[a-zA-Zа-яА-Я]+" maxlength="90"/>
+              </div>
+          </div>
+          <div class="form-group">
+              <label class="col-sm-3">Пол: *</label>
+              <div class="col-sm-9">
+                {{#if_eq client.sex 'Муж.'}}
+                  <input type="radio" name="sex" name="sex" value="Муж." required="required" checked/>Муж.
+                  <input type="radio" name="sex" name="sex" value="Жен."/>Жен.
+                {{else}}
+                  <input type="radio" name="sex" name="sex" value="Муж." required="required"/>Муж.
+                  <input type="radio" name="sex" name="sex" value="Жен." checked/>Жен.
+                {{/if_eq}}
+              </div>
+          </div>
+          <div class="form-group">
+              <label class="col-sm-3">Идентификационный номер: *</label>
+              <div class="col-sm-9">
+                  <input class="form-control" type="text" placeholder="Идентификационный номер" name="passport_id" value="{{client.passport_id}}" minlength="9" maxlength="13" pattern="[a-zA-Z0-9]*" required/>
+              </div>
+          </div>
+          <div class="form-group">
+              <label class="col-sm-3">Серия паспорта: *</label>
+              <div class="col-sm-9">
+                  <input class="form-control" type="text" placeholder="Серия паспорта" name="passport_series" value="{{client.passport_series}}" maxlength="5" required />
+              </div>
+          </div>
+          <div class="form-group">
+              <label class="col-sm-3">Номер паспорта: *</label>
+              <div class="col-sm-9">
+                  <input class="form-control" type="text" placeholder="Номер паспорта" name="passport_no" value="{{client.passport_no}}" maxlength="30" minlength="5" pattern="[0-9]+" required/>
+              </div>
+          </div>
+          <div class="form-group">
+              <label class="col-sm-3">Выдан: *</label>
+              <div class="col-sm-9">
+                  <input class="form-control" type="text" placeholder="Выдан" name="passport_issuer" value="{{client.passport_issuer}}" title="Выдан" required="required" maxlength="500"/>
+              </div>
+          </div>
+          <div class="form-group">
+              <label class="col-sm-3">Дата выдачи: *</label>
+              <div class="col-sm-9">
+                  <input class="form-control" type="date" id="date" style="padding-top:5; padding-bottom:5" value="{{client.passport_issue_date}}" name="passport_issue_date" required="required"/>
+              </div>
+          </div>
+          <div class="form-group">
+              <label class="col-sm-3">Дата рождения: *</label>
+              <div class="col-sm-9">
+                  <input class="form-control" type="date" id="date1" style="padding-top:5; padding-bottom:5" name="birthdate" value="{{client.birthdate}}"  required="required"/>
+              </div>
+          </div>
+          <div class="form-group">
+              <label class="col-sm-3">Место рождения: *</label>
+              <div class="col-sm-9">
+                  <input class="form-control" type="text" placeholder="Место рождения" name="birthplace" value="{{client.birthplace}}" />
+              </div>
+          </div>
+          <div class="form-group">
+              <label class="col-sm-3">Город: *</label>
+              <div class="col-sm-9">
+                  <select name="city" class="form-control" required="required">
+                      {{#each cities}}
+                        {{#if this.selected}}
+                            <option value={{this.id}} itemLabel="name" selected>{{this.name}}</option>
+                        {{else}}
+                            <option value={{this.id}} itemLabel="name">{{this.name}}</option>
+                        {{/if}}
+                      {{/each}}
+                  </select>
+              </div>
+          </div>
+          <div class="form-group">
+              <label class="col-sm-3">Семейное положение: *</label>
+              <div class="col-sm-9">
+                <select name="martial_status" class="form-control" required="required">
+                    {{#each martialStatus}}
+                      {{#if this.selected}}
+                          <option value={{this.id}} itemLabel="name" selected>{{this.name}}</option>
+                      {{else}}
+                          <option value={{this.id}} itemLabel="name">{{this.name}}</option>
+                      {{/if}}
+                    {{/each}}
+                </select>
+              </div>
+          </div>
+          <div class="form-group">
+              <label class="col-sm-3">Гражданство: *</label>
+              <div class="col-sm-9">
+                <select name="citizenship" class="form-control" required="required">
+                    {{#each citizenship}}
+                      {{#if this.selected}}
+                          <option value={{this.id}} itemLabel="name" selected>{{this.name}}</option>
+                      {{else}}
+                          <option value={{this.id}} itemLabel="name">{{this.name}}</option>
+                      {{/if}}
+                    {{/each}}
+                </select>
+              </div>
+          </div>
+          <div class="form-group">
+              <label class="col-sm-3">Инвалидность: *</label>
+              <div class="col-sm-9">
+                <select name="disability" class="form-control" required="required">
+                    {{#each disabilities}}
+                      {{#if this.selected}}
+                          <option value={{this.id}} itemLabel="name" selected>{{this.name}}</option>
+                      {{else}}
+                          <option value={{this.id}} itemLabel="name">{{this.name}}</option>
+                      {{/if}}
+                    {{/each}}
+                </select>
+              </div>
+          </div>
+          <div class="form-group">
+              <label class="col-sm-3">Адрес: *</label>
+              <div class="col-sm-9">
+                  <input class="form-control" type="text" placeholder="Адрес" name="address" value="{{client.address}}" required="required"/>
+              </div>
+          </div>
+          <div class="form-group">
+              <label class="col-sm-3">Домашний телефон: </label>
+              <div class="col-sm-9">
+                  <input class="form-control" type="text" placeholder="Домашний телефон" name="home_phonenumber" value="{{client.home_phonenumber}}" pattern="[0-9]+" minlength="5" maxlength="45"/>
+              </div>
+          </div>
+          <div class="form-group">
+              <label class="col-sm-3">Мобильный телефон: </label>
+              <div class="col-sm-9">
+                  <input class="form-control" type="text" placeholder="Мобильный телефон" name="mobile_phonenumber" value="{{client.mobile_phonenumber}}" pattern="[0-9]+" minlength="5" maxlength="45"/>
+              </div>
+          </div>
+          <div class="form-group">
+              <label class="col-sm-3">Email: </label>
+              <div class="col-sm-9">
+                  <input class="form-control" type="email" placeholder="Email" name="email" value="{{client.email}}" />
+              </div>
+          </div>
+          <div class="form-group">
+              <label class="col-sm-3">Адрес проживания: *</label>
+              <div class="col-sm-9">
+                  <input class="form-control" type="text" placeholder="Адрес проживания" name="residence" value="{{client.residence}}" />
+              </div>
+          </div>
+          <div class="form-group">
+              <label class="col-sm-3">Месячный доход: </label>
+              <div class="col-sm-9">
+                  <input class="form-control" type="number" placeholder="Месячный доход" name="monthly_income" value="{{client.monthly_income}}" />
+              </div>
+          </div>
+          <div class="form-group">
+              <label class="col-sm-3">Пенсионер: *</label>
+              <div class="col-sm-9">
+                {{#if client.pensioner}}
+                  <input type="checkbox" name="pensioner" checked/>
+                {{else}}
+                <input type="checkbox" name="pensioner"/>
+                {{/if}}
+              </div>
+          </div>
+              <div id="success">
+              </div>
+              <div id="error">
+              </div>
+              <div class="form-group">
+                  <div class="col-sm-9 col-sm-offset-3">
+                      <button type="submit" id="add" style="margin: 5px auto 0 auto" class="btn btn-info btn-lg">Сохранить</button>
+                  </div>
+              </div>
+
+      </form>
+</div>

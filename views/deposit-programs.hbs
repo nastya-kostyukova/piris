@@ -1,0 +1,21 @@
+<div class="col-md-8 col-md-offset-2">
+    <h2>Депозитные программы</h2>
+    {{#each deposits_types}}
+    <table class="table table-bordered table-hover "
+           style="overflow: scroll; font-size: 17px; margin-top: 20px;">
+        <tbody>
+              <tr><td rowspan="3">{{this.name}}</td></tr>
+              <tr>
+                {{#each this.duration}}
+                  <td>{{this.duration}} мес.</td>
+                  {{/each}}
+              </tr>
+              <tr>
+                {{#each this.duration}}
+                  <td>{{this.percent}} %</td>
+                  {{/each}}
+              </tr>
+        </tbody>
+    </table>
+    {{/each}}
+</div>

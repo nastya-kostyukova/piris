@@ -1,0 +1,10 @@
+{
+    "db": {
+        "host":     "localhost",
+        "port":     "3306",
+        "database": "bank",
+        "user":     "root",
+        "password": "123",
+        "connectionLimit": 1000
+    }
+}

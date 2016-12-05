@@ -1,0 +1,41 @@
+
+<div class="col-md-10 col-md-offset-1">
+    <table class="table table-bordered table-hover "
+           style="overflow: scroll; font-size: 17px; margin-top: 20px;">
+        <tbody>
+            <tr>
+                <td rowspan="3">Счет развития банка</td>
+                <td>Номер</td>
+                <td>Тип</td>
+                <td>Баланс</td>
+            </tr>
+            <tr>
+                <td>{{fund_development.account_number}}</td>
+                <td>{{fund_development.active_type}}</td>
+                <td>{{fund_development.balance}}</td>
+            </tr>
+        </tbody>
+    </table>
+
+    <table class="table table-bordered table-hover "
+           style="overflow: scroll; font-size: 15px; margin-top: 20px;">
+           <thead>
+               <tr>
+                   <th>Номер</th>
+                   <th>Тип</th>
+                   <th>Баланс</th>
+                   <th>Имя</th>
+               </tr>
+           </thead>
+        <tbody>
+          {{#each fund_development.clients}}
+            <tr>
+                <td>{{this.account_number}}</td>
+                <td>{{this.active_type}}</td>
+                <td>{{this.balance}}</td>
+                <td>{{this.name}}</td>
+            </tr>
+          {{/each}}
+        </tbody>
+    </table>
+</div>
