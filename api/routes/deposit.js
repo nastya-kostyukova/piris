@@ -126,16 +126,12 @@ router.post('/deposits/add', function*() {
         if (duration < deposit.duration_min) {
             this.throw(409, 'Deposit duration is too small');
         }
-        // if (id == '') {
+
         delete data.id;
         data.duration = duration;
         const insert = yield Deposit.createAccounts(data);
         this.request.body = { id: insert };
-        // } else {
-        //     delete data.id;
-        //     const update = yield Client.update(id, data);
-        //     this.request.body = { id: update };
-        // }
+
         this.redirect('/deposits/cash/');
     } catch (e) {
         this.throw(e.status||500, e.message);

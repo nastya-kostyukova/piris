@@ -9,7 +9,7 @@ const moment       = require('moment');
 router.get('/credits/cash', function*() {
     try {
         const cash = yield Credit.getCash();
-        yield this.render('cash-credit', {
+        yield this.render('cash_credit', {
             title: 'Cash account',
             cash,
         });
@@ -32,10 +32,9 @@ router.get('/credits/clients', function*() {
 
 router.get('/credits/add', function*() {
     try {
-        const credit_types = yield Credit.getDepositTypes();
+        const credit_types = yield Credit.getCreditTypes();
 
-        const currencies = yield Credit.getCurrencies();
-        // const query = this.request.query;
+        const currencies = yield Deposit.getCurrencies();
         const clients = yield Client.list();
         clients.map((c) => {
             c.birthdate = moment(c.birthdate).format('MM-DD-YYYY');
@@ -63,7 +62,7 @@ router.post('/credits/add', function*() {
         const end = moment(data.end);
 
         const duration = end.diff(start, 'months');
-        const credit = yield Credit.getDepositTypesById(data.type);
+        const credit = yield Credit.getCreditTypesById(data.type);
 
         if (duration > credit.duration_max) { //!!! REVIEW TABLE SCHEMA
             this.throw(409, 'Deposit duration is too small');

@@ -105,6 +105,32 @@ function addDepositHandler(form) {
     }, true);
 }
 
+function addCreditHandler(form) {
+    form.addEventListener('submit', (e) => {
+        const dataToSend = {
+            id: form.elements.id.value,
+            client: form.elements.client.value,
+            type: form.elements.type.value,
+            agreement_number: form.elements.agreement_number.value,
+            start: form.elements.start.value,
+            end: form.elements.end.value,
+            sum: form.elements.init_sum.value,
+            currency: form.elements.currency.value,
+        };
+
+        e.stopPropagation();
+        e.preventDefault();
+        sendPost(form, '/credits/add',
+          dataToSend)
+          //.then(response => response.json())
+          .then(() => {
+              setTimeout(() => {
+                  window.location.href = '/credits/cash';
+              }, 500);
+          });
+    }, true);
+}
+
 function addGetMoneyHandler(form) {
     form.addEventListener('submit', (e) => {
         const dataToSend = {
@@ -150,12 +176,14 @@ function receivePercentHandler(form) {
 document.addEventListener('DOMContentLoaded', () => {
     const addClientForm = document.getElementById('addClient');
     const addDepositForm = document.getElementById('addDeposit');
+    const addCreditForm = document.getElementById('addCredit');
     const getMoney = document.getElementsByClassName('getMoney');
     const fromCash = document.getElementsByClassName('fromCash');
     const receivePercent = document.getElementsByClassName('receivePercent');
 
     if (addClientForm) addClientHandler(addClientForm);
     if (addDepositForm) addDepositHandler(addDepositForm);
+    if (addCreditForm) addCreditHandler(addCreditForm);
     if (getMoney.length) {
         for(let i = 0; i< getMoney.length; i++) {
             addGetMoneyHandler(getMoney[i]);

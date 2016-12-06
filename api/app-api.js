@@ -74,6 +74,7 @@ app.use(function* handleErrors(next) {
 app.use(require('./routes/root.js'));
 app.use(require('./routes/client.js'));
 app.use(require('./routes/deposit.js'));
+app.use(require('./routes/credit.js'));
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -  */
 
 require('./cron.js').scheduleDay();

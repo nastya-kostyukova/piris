@@ -1,0 +1,91 @@
+
+<div class="col-md-10 col-md-offset-1">
+    <table class="table table-bordered table-hover "
+           style="overflow: scroll; font-size: 17px; margin-top: 20px;">
+        <tbody>
+            <tr>
+                <td rowspan="3">Кассовый счет</td>
+                <td>Номер</td>
+                <td>Тип</td>
+                <td>Баланс</td>
+            </tr>
+            <tr>
+                <td>{{cash.account_number}}</td>
+                <td>{{cash.active_type}}</td>
+                <td>{{cash.balance}}</td>
+            </tr>
+        </tbody>
+    </table>
+
+    <table class="table table-bordered table-hover "
+           style="overflow: scroll; font-size: 15px; margin-top: 20px;">
+           <thead>
+               <tr>
+                   <th>Тип</th>
+                   <th>Дата начала</th>
+                   <th>Дата конца</th>
+                   <th>Длительность</th>
+                   <th>Первоначальный взнос</th>
+                   <th>Номер договора</th>
+                   <th>Имя</th>
+                   <th></th>
+               </tr>
+           </thead>
+        <tbody>
+          {{#each cash.agreements}}
+            <tr>
+                <td>{{this.type}}</td>
+                <td>{{this.start}}</td>
+                <td>{{this.end}}</td>
+                <td>{{this.duration}} мес.</td>
+                <td>{{this.sum}} {{this.currency}}</td>
+                <td>{{this.agreement_number}}</td>
+                <td>{{this.name}}</td>
+                <td>
+                    <form action="/deposits/sent-to-current" method="post">
+                      <input type="hidden" name="id" value={{this.idagreement_credit}}>
+                      <button type="submit" class="btn btn-success">
+                          <i class="fa fa-share-square-o" aria-hidden="true"></i>
+                      </button>
+                    </form>
+                    <form action="/deposits/delete" method="post">
+                      <input type="hidden" name="id" value={{this.idagreement_credit}}>
+                      <button type="submit" class="btn btn-danger">
+                          <i class="fa fa-trash" aria-hidden="true"></i>
+                      </button>
+                    </form>
+                </td>
+            </tr>
+          {{/each}}
+        </tbody>
+    </table>
+
+    Снятие денег
+    <table class="table table-bordered table-hover "
+           style="overflow: scroll; font-size: 17px; margin-top: 20px;">
+       <thead>
+           <tr>
+               <th>Номер договора</th>
+               <th>Баланс</th>
+               <th></th>
+           </tr>
+       </thead>
+        <tbody>
+            {{#each cash.receiveClients}}
+            <tr>
+                <td>{{this.id}}</td>
+                <td>{{this.sum}} {{this.currency}}</td>
+                <td>
+                  <form class="fromCash" method="post">
+                    <input type="hidden" name="id" value={{this.id}}>
+                    <input type="hidden" name="sum" value={{this.sum}}>
+                    <button type="submit" class="btn btn-success">
+                        <i class="fa fa-share-square-o" aria-hidden="true"></i>
+                    </button>
+                  </form>
+                </td>
+            </tr>
+          {{/each}}
+        </tbody>
+    </table>
+</div>
