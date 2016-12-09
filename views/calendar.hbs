@@ -1,0 +1,20 @@
+
+<div class="col-md-10 col-md-offset-1">
+    <table class="table table-bordered table-hover "
+           style="overflow: scroll; font-size: 17px; margin-top: 20px;">
+       <thead>
+           <tr>
+               <th style="text-align:center;">Срок</th>
+               <th style="text-align:center;">Процент</th>
+           </tr>
+       </thead>
+        <tbody>
+            {{#each calendar}}
+            <tr>
+                <td>{{this.title}}</td>
+                <td>{{this.sum}}</td>
+            </tr>
+          {{/each}}
+        </tbody>
+    </table>
+</div>

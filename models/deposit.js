@@ -44,7 +44,7 @@ const SQL_SELECT_CLIENT_ACCOUNTS = 'SELECT p.account_number as p_account_number,
         'c.account_number as c_account_number, c.active_type as c_active_type, ' +
         'c.balance as c_balance, c.name as c_name ' +
         'FROM client_current c ' +
-        'JOIN client_percent p ON c.agreement = p.agreement ';
+        'JOIN client_percent p ON c.agreement = p.agreement';
 
 const SQL_SELECT_CLIENT_CURRENT_BY_AGREEMENT = 'SELECT c.account_number, a.start, a.end,'+
         ' a.init_sum, t.revocable, c.balance ' +

@@ -6,10 +6,11 @@ const Lib        = require('../lib/lib.js');
 const ModelError = require('./modelerror.js');
 const Client     = require('./client.js');
 const moment     = require('moment');
+const co         = require('co');
 const Credit = module.exports = {};
 
 const SQL_SELECT_CURRENCY_BY_ID = 'SELECT * FROM currency WHERE id=?';
-const SQL_SELECT_AGREEMENT_BY_ID = 'SELECT a.idagreement_credit, t.name as type, c.rate as rate,' +
+const SQL_SELECT_AGREEMENT_BY_ID = 'SELECT a.idagreement_credit, t.name as type, t.percent as percent, c.rate as rate,' +
         ' c.name as currency, c.id as idcurrency, a.start, a.end, a.duration, '+
         ' a.sum, a.agreement_number, a.name ' +
         'FROM agreement_credit a ' +
@@ -21,6 +22,14 @@ const SQL_SELECT_BANK_CASH = 'SELECT * FROM cash_account_credit';
 const SQL_GET_BALLANCE_ACCOUNTS = 'SELECT name, value FROM balance_accounts';
 const SQL_SELECT_ALL_CREDITS_TYPES = 'SELECT * FROM credit_type';
 const SQL_SELECT_CREDIT_TYPE_BY_ID = 'SELECT * FROM credit_type WHERE id=?';
+const SQL_SELECT_FUND_DEVELOPMENT = 'SELECT * FROM fund_development';
+const SQL_SELECT_CLIENT_ACCOUNTS = 'SELECT p.account_number as p_account_number, ' +
+        'p.active_type as p_active_type, p.agreement, ' +
+        'p.balance as p_balance, p.name as p_name, ' +
+        'c.account_number as c_account_number, c.active_type as c_active_type, ' +
+        'c.balance as c_balance, c.name as c_name ' +
+        'FROM client_current_credit c ' +
+        'JOIN client_percent_credit p ON c.agreement = p.agreement';
 
 const SQL_INSERT_AGREEMENT = 'INSERT INTO agreement_credit SET ?';
 const SQL_CREATE_BANK_CASH = 'INSERT INTO cash_account SET ?';
@@ -28,6 +37,8 @@ const SQL_CREATE_CLIENT_CURRENT = 'INSERT INTO client_current_credit SET ?';
 const SQL_CREATE_CLIENT_PROCENT = 'INSERT INTO client_percent_credit SET ?';
 
 const SQL_UPDATE_CASH = 'UPDATE cash_account_credit SET ? WHERE account_number=?';
+const SQL_UPDATE_FUND_DEVELOPMET = 'UPDATE fund_development SET ? WHERE account_number=?';
+const SQL_UPDATE_CLIENT_CURRENT = 'UPDATE client_current_credit SET ? WHERE agreement=?';
 
 function getRandomArbitary(min = 0, max = 9) {
     return Math.floor(Math.random() * (max - min + 1)) + min;
@@ -55,12 +66,68 @@ function* addAgreementToCash(id, sum) {
     } else {
         agreementsInCash = String(id);
     }
-    console.log(agreementsInCash);
+
     yield global.db.query(SQL_UPDATE_CASH,
         [{
             agreements: agreementsInCash,
             balance: +cash_account[0].balance + +sum,
         }, cash_account[0].account_number]);
+}
+
+function* deleteAgreementFromCash(id) {
+    const [cash_account] = yield global.db.query(SQL_SELECT_BANK_CASH);
+    const [res] = yield global.db.query(SQL_SELECT_AGREEMENT_BY_ID, id);
+    const agreement = res[0];
+
+    let agreementsInCash;
+    if (cash_account[0].agreements) {
+        cash_account[0].agreements = cash_account[0].agreements.split(',');
+        cash_account[0].agreements = cash_account[0].agreements.filter((a) => a !== id);
+        agreementsInCash = cash_account[0].agreements.join(',');
+    } else {
+        agreementsInCash = '';
+    }
+
+    console.log(cash_account[0]);
+    console.log('---deleting sum from cash', +cash_account[0].balance);
+    console.log('---agreement.rate', agreement.rate);
+    console.log('--- agreement.init_sum', agreement.sum);
+    yield global.db.query(SQL_UPDATE_CASH,
+        [{
+            agreements: agreementsInCash,
+            balance: +cash_account[0].balance - +agreement.sum,
+        }, cash_account[0].account_number]);
+
+    return {
+        id,
+        sum: agreement.sum,
+    };
+}
+
+function getDiscretCalendar(startDate, endDate, sum, percent) {
+    let persentSumMonth = 0;
+    const persentSumTotal = [];
+    let allSum = sum;
+    let i = 1;
+    const start = moment(startDate);
+    const end = moment(endDate);
+    const diffSum = sum / end.diff(start, 'month');
+    // console.log(`diffSum ${diffSum}`);
+    //Вся сумма - процент за день * размер периода* номер пириода
+
+    while(start.diff(end, 'months') < 0) {
+        // console.log(`allSum ${allSum} daysInMonth ${start.daysInMonth()}  ${i}`);
+        persentSumMonth =  percent / 100 * allSum * start.daysInMonth();
+        // console.log(`persentSumMonth ${persentSumMonth}`);
+        allSum -= diffSum;
+        persentSumTotal.push({
+            sum: persentSumMonth,
+            title: `${i} ${start.format('MMMM')}`,
+        });
+        start.add(1, 'months');
+        i++;
+    }
+    return persentSumTotal;
 }
 
 Credit.getCash = function * () {
@@ -120,7 +187,6 @@ Credit.createAccounts = function* (agreement) {
         agreement.name = FIO;
         const [currency] = yield global.db.query(SQL_SELECT_CURRENCY_BY_ID, agreement.currency);
         agreement.sum = agreement.sum / currency[0].rate;
-        console.log(agreement);
         const [newAgreement] = yield global.db.query(SQL_INSERT_AGREEMENT, agreement);
 
         console.log('Agreement.insert', newAgreement.insertId, new Date); // eg audit trail?
@@ -132,7 +198,7 @@ Credit.createAccounts = function* (agreement) {
                 account_number: cashNum,
             }]);
         }
-        console.log('create client arr');
+
         /*Create client accounts*/
         const currentNum = yield generateAccountNumber('client_current');
         yield global.db.query(SQL_CREATE_CLIENT_CURRENT, [
@@ -151,6 +217,12 @@ Credit.createAccounts = function* (agreement) {
         /*Recieve money to bank cash*/
         yield addAgreementToCash(newAgreement.insertId, agreement.sum);
 
+        // get money from fund development
+        const [fund_development] = yield global.db.query(SQL_SELECT_FUND_DEVELOPMENT);
+        yield global.db.query(SQL_UPDATE_FUND_DEVELOPMET, [{
+            balance: fund_development[0].balance - agreement.sum,
+        }, fund_development[0].account_number]);
+
         return newAgreement.insertId;
     } catch (e) {
         switch (e.code) {
@@ -163,6 +235,73 @@ Credit.createAccounts = function* (agreement) {
                 throw ModelError(409, e.message); // Conflict
             default:
                 Lib.logException('Create account', e);
+                throw ModelError(500, e.message); // Internal Server Error
+        }
+    }
+};
+
+Credit.sentToCurrent = function * (id){
+    try {
+        const cash = yield deleteAgreementFromCash(id);
+        yield global.db.query(SQL_UPDATE_CLIENT_CURRENT,
+            [{
+                balance: cash.sum,
+            }, id]);
+
+        console.log('Update.client_current', id, new Date); // eg audit trail?
+    } catch (e) {
+        switch (e.code) {
+            // recognised errors for Client.update - just use default MySQL messages for now
+            case 'ER_BAD_NULL_ERROR':
+            case 'ER_NO_REFERENCED_ROW_2':
+            case 'ER_NO_DEFAULT_FOR_FIELD':
+                throw ModelError(403, e.message); // Forbidden
+            case 'ER_DUP_ENTRY':
+                throw ModelError(409, e.message); // Conflict
+            default:
+                Lib.logException('Client.insert', e);
+                throw ModelError(500, e.message); // Internal Server Error
+        }
+    }
+};
+
+Credit.getClientAccounts = function * () {
+    try {
+        const [clients] = yield global.db.query(SQL_SELECT_CLIENT_ACCOUNTS);
+        return clients;
+    } catch(e) {
+        switch (e.code) {
+            // recognised errors for Client.update - just use default MySQL messages for now
+            case 'ER_BAD_NULL_ERROR':
+            case 'ER_NO_REFERENCED_ROW_2':
+            case 'ER_NO_DEFAULT_FOR_FIELD':
+                throw ModelError(403, e.message); // Forbidden
+            case 'ER_DUP_ENTRY':
+                throw ModelError(409, e.message); // Conflict
+            default:
+                Lib.logException('Get clients accounts', e);
+                throw ModelError(500, e.message); // Internal Server Error
+        }
+    }
+};
+
+Credit.getCalendar = function * (id) {
+    try {
+        const [clients] = yield global.db.query(SQL_SELECT_AGREEMENT_BY_ID, id);
+        const client = clients[0];
+        const res = getDiscretCalendar(client.start, client.end, client.sum, client.percent);
+        return res;
+    } catch(e) {
+        switch (e.code) {
+            // recognised errors for Client.update - just use default MySQL messages for now
+            case 'ER_BAD_NULL_ERROR':
+            case 'ER_NO_REFERENCED_ROW_2':
+            case 'ER_NO_DEFAULT_FOR_FIELD':
+                throw ModelError(403, e.message); // Forbidden
+            case 'ER_DUP_ENTRY':
+                throw ModelError(409, e.message); // Conflict
+            default:
+                Lib.logException('Get clients accounts', e);
                 throw ModelError(500, e.message); // Internal Server Error
         }
     }

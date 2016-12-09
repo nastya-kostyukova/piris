@@ -6,9 +6,7 @@ const co = require('co');
 
 function sendMoney() {
     return co(function* sendInBackground() {
-        console.log('---update fund development---');
         const users = yield Deposit.getAllClientCurrent();
-        console.log(`users count: ${users.length}`);
         if (users && users.length) {
             const fund_development = yield Deposit.getFundDevelopent();
             const accountsId = [];
@@ -30,7 +28,6 @@ function sendMoney() {
                 yield Deposit.updateClientCurrent({ balance: 0 }, users[i].agreement);
             }
         }
-        console.log('---finished updating fund---');
     });
 }
 

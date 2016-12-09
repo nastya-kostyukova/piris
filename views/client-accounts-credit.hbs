@@ -1,0 +1,38 @@
+<div class="col-md-10 col-md-offset-1">
+    <table class="table table-bordered table-hover "
+           style="overflow: scroll; font-size: 14px; margin-top: 20px;text-align:center;">
+           <thead>
+               <tr>
+                   <th style="text-align:center">Номер договора</th>
+                   <th style="text-align:center">Номер счета</th>
+                   <th style="text-align:center">Тип</th>
+                   <th style="text-align:center">Баланс</th>
+                   <th style="text-align:center">Имя</th>
+                   <th style="text-align:center">Действия</th>
+               </tr>
+           </thead>
+        <tbody>
+          {{#each clients}}
+            <tr><td rowspan="3">{{this.agreement}}</td></tr>
+            <tr>
+                <td>{{this.c_account_number}}</td>
+                <td>current {{this.c_active_type}}</td>
+                <td>{{this.c_balance}}</td>
+                <td>{{this.c_name}}</td>
+                <td>
+                      <a href=/credits/calendar/{{this.agreement}} type="submit" id="get" class="btn btn-warning" title="Receive percent">
+                        <i class="fa fa-calendar-check-o" aria-hidden="true"></i>
+                      </a>
+                </td>
+            </tr>
+            <tr>
+                <td>{{this.p_account_number}}</td>
+                <td>percent {{this.p_active_type}}</td>
+                <td>{{this.p_balance}}</td>
+                <td>{{this.p_name}}</td>
+            </tr>
+          {{/each}}
+        </tbody>
+    </table>
+    <div class="errors" id="error"></div>
+</div>

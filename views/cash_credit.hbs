@@ -42,16 +42,10 @@
                 <td>{{this.agreement_number}}</td>
                 <td>{{this.name}}</td>
                 <td>
-                    <form action="/deposits/sent-to-current" method="post">
+                    <form action="/credits/sent-to-current" method="post">
                       <input type="hidden" name="id" value={{this.idagreement_credit}}>
                       <button type="submit" class="btn btn-success">
                           <i class="fa fa-share-square-o" aria-hidden="true"></i>
-                      </button>
-                    </form>
-                    <form action="/deposits/delete" method="post">
-                      <input type="hidden" name="id" value={{this.idagreement_credit}}>
-                      <button type="submit" class="btn btn-danger">
-                          <i class="fa fa-trash" aria-hidden="true"></i>
                       </button>
                     </form>
                 </td>

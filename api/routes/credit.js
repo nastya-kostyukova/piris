@@ -33,7 +33,6 @@ router.get('/credits/clients', function*() {
 router.get('/credits/add', function*() {
     try {
         const credit_types = yield Credit.getCreditTypes();
-
         const currencies = yield Deposit.getCurrencies();
         const clients = yield Client.list();
         clients.map((c) => {
@@ -54,6 +53,18 @@ router.get('/credits/add', function*() {
     }
 });
 
+router.get('/credits/calendar/:id', function*() {
+    try {
+        const calendar = yield Credit.getCalendar(this.params.id);
+
+        yield this.render('calendar',{
+            calendar,
+        });
+    } catch (e) {
+        this.throw(e.status||500, e.message);
+    }
+});
+
 router.post('/credits/add', function*() {
     try {
         const data = this.request.body;
@@ -64,9 +75,9 @@ router.post('/credits/add', function*() {
         const duration = end.diff(start, 'months');
         const credit = yield Credit.getCreditTypesById(data.type);
 
-        if (duration > credit.duration_max) { //!!! REVIEW TABLE SCHEMA
-            this.throw(409, 'Deposit duration is too small');
-        }
+        // if (duration > credit.duration_max) { //!!! REVIEW TABLE SCHEMA
+        //     this.throw(409, 'Deposit duration is too small');
+        // }
 
         delete data.id;
         data.duration = duration;
@@ -79,7 +90,15 @@ router.post('/credits/add', function*() {
     }
 });
 
-
+router.post('/credits/sent-to-current', function * () {
+    try {
+        const id = this.request.body.id;
+        yield Credit.sentToCurrent(id);
+        this.redirect('/credits/cash/');
+    } catch (e) {
+        this.throw(e.status||500, e.message);
+    }
+});
 module.exports = router.middleware();
 
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -  */
