@@ -6,11 +6,10 @@ const Lib        = require('../lib/lib.js');
 const ModelError = require('./modelerror.js');
 const Client     = require('./client.js');
 const moment     = require('moment');
-const co         = require('co');
 const Credit = module.exports = {};
 
 const SQL_SELECT_CURRENCY_BY_ID = 'SELECT * FROM currency WHERE id=?';
-const SQL_SELECT_AGREEMENT_BY_ID = 'SELECT a.idagreement_credit, t.name as type, t.percent as percent, c.rate as rate,' +
+const SQL_SELECT_AGREEMENT_BY_ID = 'SELECT a.idagreement_credit, t.name as type, t.fullInEnd as type_p, t.percent as percent, c.rate as rate,' +
         ' c.name as currency, c.id as idcurrency, a.start, a.end, a.duration, '+
         ' a.sum, a.agreement_number, a.name ' +
         'FROM agreement_credit a ' +
@@ -31,6 +30,13 @@ const SQL_SELECT_CLIENT_ACCOUNTS = 'SELECT p.account_number as p_account_number,
         'FROM client_current_credit c ' +
         'JOIN client_percent_credit p ON c.agreement = p.agreement';
 
+const SQL_SELECT_CLIENT_CURRENT_WITH_AGREEMENT = 'SELECT c.account_number, a.start, a.end, t.fullInEnd as type_p,' +
+        ' a.duration, a.sum, c.agreement, t.percent, t.duration_min, t.duration_max, t.percent_max, t.revocable ' +
+        'FROM bank.client_current_credit c ' +
+        'JOIN agreement a ON a.idagreement_credit=c.agreement ' +
+        'JOIN credit_type t ON a.type=t.id';
+const SQL_SELECT_CLIENT_PERCENT = 'SELECT * FROM client_percent WHERE agreement=?';
+
 const SQL_INSERT_AGREEMENT = 'INSERT INTO agreement_credit SET ?';
 const SQL_CREATE_BANK_CASH = 'INSERT INTO cash_account SET ?';
 const SQL_CREATE_CLIENT_CURRENT = 'INSERT INTO client_current_credit SET ?';
@@ -39,6 +45,7 @@ const SQL_CREATE_CLIENT_PROCENT = 'INSERT INTO client_percent_credit SET ?';
 const SQL_UPDATE_CASH = 'UPDATE cash_account_credit SET ? WHERE account_number=?';
 const SQL_UPDATE_FUND_DEVELOPMET = 'UPDATE fund_development SET ? WHERE account_number=?';
 const SQL_UPDATE_CLIENT_CURRENT = 'UPDATE client_current_credit SET ? WHERE agreement=?';
+const SQL_UPDATE_CLIENT_PERCENT = 'UPDATE client_percent_credit SET ? WHERE agreement=?';
 
 function getRandomArbitary(min = 0, max = 9) {
     return Math.floor(Math.random() * (max - min + 1)) + min;
@@ -104,7 +111,7 @@ function* deleteAgreementFromCash(id) {
     };
 }
 
-function getDiscretCalendar(startDate, endDate, sum, percent) {
+Credit.getDiscretCalendar = function (startDate, endDate, sum, percent, isReceivePercent) {
     let persentSumMonth = 0;
     const persentSumTotal = [];
     let allSum = sum;
@@ -113,7 +120,7 @@ function getDiscretCalendar(startDate, endDate, sum, percent) {
     const end = moment(endDate);
     const diffSum = sum / end.diff(start, 'month');
     // console.log(`diffSum ${diffSum}`);
-    //Вся сумма - процент за день * размер периода* номер пириода
+    //Вся сумма - процент за день * размер периода* номер периода
 
     while(start.diff(end, 'months') < 0) {
         // console.log(`allSum ${allSum} daysInMonth ${start.daysInMonth()}  ${i}`);
@@ -127,8 +134,33 @@ function getDiscretCalendar(startDate, endDate, sum, percent) {
         start.add(1, 'months');
         i++;
     }
+    if (isReceivePercent) {
+        persentSumMonth.push(percent / 100 * allSum * start.diff(end, 'days'));
+    }
     return persentSumTotal;
-}
+};
+
+Credit.getRegularCalendar = function (startDate, endDate, sum, percent, isReceivePercent) {
+    const persentSumTotal = [];
+    let i = 1;
+    const start = moment(startDate);
+    const end = moment(endDate);
+    console.log(start.diff(end, 'months'));
+    console.log(persentSumTotal);
+
+    while(start.diff(end, 'months') < 0) {
+        persentSumTotal.push({
+            sum: percent / 100 * sum * start.daysInMonth(),
+            title: `${i} ${start.format('MMMM')}`,
+        });
+        i++;
+        start.add(1, 'months');
+    }
+    if (isReceivePercent) {
+        persentSumTotal.push(percent / 100 * sum * start.diff(end, 'days'));
+    }
+    return persentSumTotal;
+};
 
 Credit.getCash = function * () {
     try {
@@ -247,7 +279,23 @@ Credit.sentToCurrent = function * (id){
             [{
                 balance: cash.sum,
             }, id]);
+        const [clients] = yield global.db.query(SQL_SELECT_AGREEMENT_BY_ID, id);
+        const client = clients[0];
+        let sum = 0;
+        let calendar;
+        if (+client.type_p) {
+            calendar = Credit.getDiscretCalendar(client.start, client.end, client.sum, client.percent, true);
 
+        } else {
+            calendar = Credit.getRegularCalendar(client.start, client.end, client.sum, client.percent, true);
+        }
+        calendar.forEach((raw) => {
+            sum += raw.sum;
+        });
+        yield global.db.query(SQL_UPDATE_CLIENT_PERCENT,
+            [{
+                balance: -sum,
+            }, id]);
         console.log('Update.client_current', id, new Date); // eg audit trail?
     } catch (e) {
         switch (e.code) {
@@ -289,8 +337,14 @@ Credit.getCalendar = function * (id) {
     try {
         const [clients] = yield global.db.query(SQL_SELECT_AGREEMENT_BY_ID, id);
         const client = clients[0];
-        const res = getDiscretCalendar(client.start, client.end, client.sum, client.percent);
-        return res;
+        let calendar;
+        if (+client.type_p) {
+            calendar = Credit.getDiscretCalendar(client.start, client.end, client.sum, client.percent, true);
+        } else {
+            calendar = Credit.getRegularCalendar(client.start, client.end, client.sum, client.percent, true);
+        }
+        console.log(calendar);
+        return calendar;
     } catch(e) {
         switch (e.code) {
             // recognised errors for Client.update - just use default MySQL messages for now
@@ -305,4 +359,16 @@ Credit.getCalendar = function * (id) {
                 throw ModelError(500, e.message); // Internal Server Error
         }
     }
+};
+
+Credit.getClientCurrents = function * () {
+    const db = yield global.connectionPool.getConnection();
+    const [client_currents] = yield db.query(SQL_SELECT_CLIENT_CURRENT_WITH_AGREEMENT);
+    return client_currents;
+};
+
+Credit.selectClientPercent = function * (id) {
+    const db = yield global.connectionPool.getConnection();
+    const [client_percent] = yield db.query(SQL_SELECT_CLIENT_PERCENT, id);
+    return client_percent[0];
 };
