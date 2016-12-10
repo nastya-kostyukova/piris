@@ -75,9 +75,9 @@ router.post('/credits/add', function*() {
         const duration = end.diff(start, 'months');
         const credit = yield Credit.getCreditTypesById(data.type);
 
-        // if (duration > credit.duration_max) { //!!! REVIEW TABLE SCHEMA
-        //     this.throw(409, 'Deposit duration is too small');
-        // }
+        if (duration < credit.duration_min) {
+            this.throw(409, `Credit duration should be less then ${credit.duration_min} month`);
+        }
 
         delete data.id;
         data.duration = duration;

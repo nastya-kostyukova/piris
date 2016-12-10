@@ -83,3 +83,4 @@ require('./cron.js').scheduleMonth();
 require('./handlers/percents.js').subscribe();
 // require('./handlers/close.deposit.js').subscribe();
 require('./handlers/fund-development.js').subscribe();
+require('./handlers/credit-percent.js').subscribe();

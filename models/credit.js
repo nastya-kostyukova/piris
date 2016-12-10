@@ -31,11 +31,11 @@ const SQL_SELECT_CLIENT_ACCOUNTS = 'SELECT p.account_number as p_account_number,
         'JOIN client_percent_credit p ON c.agreement = p.agreement';
 
 const SQL_SELECT_CLIENT_CURRENT_WITH_AGREEMENT = 'SELECT c.account_number, a.start, a.end, t.fullInEnd as type_p,' +
-        ' a.duration, a.sum, c.agreement, t.percent, t.duration_min, t.duration_max, t.percent_max, t.revocable ' +
+        ' a.duration, a.sum, c.agreement, t.percent, t.duration_min, t.duration_max ' +
         'FROM bank.client_current_credit c ' +
-        'JOIN agreement a ON a.idagreement_credit=c.agreement ' +
+        'JOIN agreement_credit a ON a.idagreement_credit=c.agreement ' +
         'JOIN credit_type t ON a.type=t.id';
-const SQL_SELECT_CLIENT_PERCENT = 'SELECT * FROM client_percent WHERE agreement=?';
+const SQL_SELECT_CLIENT_PERCENT = 'SELECT * FROM client_percent_credit WHERE agreement=?';
 
 const SQL_INSERT_AGREEMENT = 'INSERT INTO agreement_credit SET ?';
 const SQL_CREATE_BANK_CASH = 'INSERT INTO cash_account SET ?';
@@ -135,7 +135,10 @@ Credit.getDiscretCalendar = function (startDate, endDate, sum, percent, isReceiv
         i++;
     }
     if (isReceivePercent) {
-        persentSumMonth.push(percent / 100 * allSum * start.diff(end, 'days'));
+        persentSumTotal.push({
+            sum: percent / 100 * allSum * end.diff(start, 'days'),
+            title: 'Percent for this month',
+        });
     }
     return persentSumTotal;
 };
@@ -145,8 +148,6 @@ Credit.getRegularCalendar = function (startDate, endDate, sum, percent, isReceiv
     let i = 1;
     const start = moment(startDate);
     const end = moment(endDate);
-    console.log(start.diff(end, 'months'));
-    console.log(persentSumTotal);
 
     while(start.diff(end, 'months') < 0) {
         persentSumTotal.push({
@@ -157,7 +158,10 @@ Credit.getRegularCalendar = function (startDate, endDate, sum, percent, isReceiv
         start.add(1, 'months');
     }
     if (isReceivePercent) {
-        persentSumTotal.push(percent / 100 * sum * start.diff(end, 'days'));
+        persentSumTotal.push({
+            sum: percent / 100 * sum * end.diff(start, 'days'),
+            title: 'Percent for this month',
+        });
     }
     return persentSumTotal;
 };
@@ -283,11 +287,15 @@ Credit.sentToCurrent = function * (id){
         const client = clients[0];
         let sum = 0;
         let calendar;
+        const now = moment();
+        const end = moment(client.end);
+        const endDate = (now.diff(end) > 0) ? end : now;
+
         if (+client.type_p) {
-            calendar = Credit.getDiscretCalendar(client.start, client.end, client.sum, client.percent, true);
+            calendar = Credit.getDiscretCalendar(client.start, endDate.toDate(), client.sum, client.percent, true);
 
         } else {
-            calendar = Credit.getRegularCalendar(client.start, client.end, client.sum, client.percent, true);
+            calendar = Credit.getRegularCalendar(client.start, endDate.toDate(), client.sum, client.percent, true);
         }
         calendar.forEach((raw) => {
             sum += raw.sum;
@@ -362,13 +370,13 @@ Credit.getCalendar = function * (id) {
 };
 
 Credit.getClientCurrents = function * () {
-    const db = yield global.connectionPool.getConnection();
+    const db = (!global) ? yield global.connectionPool.getConnection() : global.db;
     const [client_currents] = yield db.query(SQL_SELECT_CLIENT_CURRENT_WITH_AGREEMENT);
     return client_currents;
 };
 
 Credit.selectClientPercent = function * (id) {
-    const db = yield global.connectionPool.getConnection();
+    const db = (!global) ? yield global.connectionPool.getConnection() : global.db;
     const [client_percent] = yield db.query(SQL_SELECT_CLIENT_PERCENT, id);
     return client_percent[0];
 };
