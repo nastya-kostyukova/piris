@@ -5,6 +5,6 @@
         "database": "bank",
         "user":     "root",
         "password": "123",
-        "connectionLimit": 100
+        "connectionLimit": 1000
     }
 }

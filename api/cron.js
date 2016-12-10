@@ -17,7 +17,7 @@ module.exports.scheduleMonth = function schedule() {
     //     emitter.emit('cron:every_day');
     // });
 
-    cron.schedule('*/15 * * * * *', () => {//percent credit
-        emitter.emit('cron:every_day_credit');
-    });
+    // cron.schedule('*/15 * * * * *', () => {//percent credit
+    //     emitter.emit('cron:every_day_credit');
+    // });
 };

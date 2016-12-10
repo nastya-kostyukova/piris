@@ -39,14 +39,12 @@ function receivePercents() {
             yield Deposit.updateClientPercent({
                 balance: client_percent.balance + persentSumTotal,
             }, client_percent.account_number);
-              // console.log('-----------------');
             if (now.diff(end, 'days') > 0) {
               //send money from fund development to client current
                 console.log('send money from fund development to client current');
                 console.log(accCurrent.agreement);
                 yield Deposit.sendToClientFromFund(accCurrent.agreement);
                 yield Deposit.sendClientsToCash(accCurrent.agreement);
-                // yield checkPercentSum(accCurrent);
             }
         }
     });
