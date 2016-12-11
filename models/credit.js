@@ -35,6 +35,8 @@ const SQL_SELECT_CLIENT_CURRENT_WITH_AGREEMENT = 'SELECT c.account_number, a.sta
         'FROM bank.client_current_credit c ' +
         'JOIN agreement_credit a ON a.idagreement_credit=c.agreement ' +
         'JOIN credit_type t ON a.type=t.id';
+const SQL_GET_PIN = 'SELECT pin FROM agreement_credit WHERE idagreement_credit=?';
+
 const SQL_SELECT_CLIENT_PERCENT = 'SELECT * FROM client_percent_credit WHERE agreement=?';
 
 const SQL_INSERT_AGREEMENT = 'INSERT INTO agreement_credit SET ?';
@@ -60,6 +62,13 @@ function* generateAccountNumber(name) {
     return +number;
 }
 
+function createPin() {
+    let number = '';
+    for (let i =0; i < 4; i++) {
+        number += '' + getRandomArbitary();
+    }
+    return number;
+}
 function* addAgreementToCash(id, sum) {
     const [cash_account] = yield global.db.query(SQL_SELECT_BANK_CASH);
     let agreementsInCash;
@@ -223,6 +232,7 @@ Credit.createAccounts = function* (agreement) {
         agreement.name = FIO;
         const [currency] = yield global.db.query(SQL_SELECT_CURRENCY_BY_ID, agreement.currency);
         agreement.sum = agreement.sum / currency[0].rate;
+        agreement.pin = createPin();
         const [newAgreement] = yield global.db.query(SQL_INSERT_AGREEMENT, agreement);
 
         console.log('Agreement.insert', newAgreement.insertId, new Date); // eg audit trail?
@@ -347,11 +357,10 @@ Credit.getCalendar = function * (id) {
         const client = clients[0];
         let calendar;
         if (+client.type_p) {
-            calendar = Credit.getDiscretCalendar(client.start, client.end, client.sum, client.percent, true);
+            calendar = Credit.getDiscretCalendar(client.start, client.end, client.sum, client.percent);
         } else {
-            calendar = Credit.getRegularCalendar(client.start, client.end, client.sum, client.percent, true);
+            calendar = Credit.getRegularCalendar(client.start, client.end, client.sum, client.percent);
         }
-        console.log(calendar);
         return calendar;
     } catch(e) {
         switch (e.code) {
@@ -379,4 +388,11 @@ Credit.selectClientPercent = function * (id) {
     const db = (!global) ? yield global.connectionPool.getConnection() : global.db;
     const [client_percent] = yield db.query(SQL_SELECT_CLIENT_PERCENT, id);
     return client_percent[0];
+};
+
+Credit.checkPin = function* (id, receivePin) {
+    const [agreements] = yield global.db.query(SQL_GET_PIN, id);
+    const pin = agreements[0].pin;
+    console.log(pin);
+    return (+pin === +receivePin);
 };

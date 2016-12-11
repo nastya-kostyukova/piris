@@ -25,8 +25,28 @@ function sendPost(form, url, data) {
         headers: {
             Accept: 'application/json',
             'Content-Type': 'application/json',
+            Authorization: `Bearer ${window.authToken}`,
         },
         body: JSON.stringify(data),
+    })
+    .then(checkStatus)
+    .catch((error) => {
+        console.log(error);
+        const errorNode = document.getElementById('error');
+        errorNode.innerHTML = error.message;
+        errorNode.style.display = 'block';
+        throw error;
+    });
+}
+
+function sendGet(url) {
+    return fetch(url, {
+        method: 'get',
+        headers: {
+            Accept: 'application/json',
+            'Content-Type': 'application/json',
+            Authorization: `Bearer ${window.authToken}`,
+        },
     })
     .then(checkStatus)
     .catch((error) => {
@@ -144,6 +164,25 @@ function addGetMoneyHandler(form) {
     }, true);
 }
 
+function creditLoginHandler(form) {
+    form.addEventListener('submit', (e) => {
+        const dataToSend = {
+            id: form.elements.id.value,
+            pin: form.elements.pin.value,
+        };
+
+        e.stopPropagation();
+        e.preventDefault();
+        sendPost(form, '/credits/login',
+          dataToSend)
+        .then(response => response.json())
+        .then((response) => {
+            window.authToken = response.token;
+            sendGet('/credits/account');
+        });
+    }, true);
+}
+
 function getFromCashHandler(form) {
     form.addEventListener('submit', (e) => {
         const dataToSend = {
@@ -180,13 +219,19 @@ document.addEventListener('DOMContentLoaded', () => {
     const getMoney = document.getElementsByClassName('getMoney');
     const fromCash = document.getElementsByClassName('fromCash');
     const receivePercent = document.getElementsByClassName('receivePercent');
+    const creditLogin = document.getElementsByClassName('creditLogin');
 
     if (addClientForm) addClientHandler(addClientForm);
     if (addDepositForm) addDepositHandler(addDepositForm);
     if (addCreditForm) addCreditHandler(addCreditForm);
     if (getMoney.length) {
-        for(let i = 0; i< getMoney.length; i++) {
+        for(let i = 0; i < getMoney.length; i++) {
             addGetMoneyHandler(getMoney[i]);
+        }
+    }
+    if (creditLogin.length) {
+        for(let i = 0; i < creditLogin.length; i++) {
+            creditLoginHandler(creditLogin[i]);
         }
     }
     if (fromCash.length) {

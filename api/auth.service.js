@@ -2,7 +2,6 @@
 
 const jwt = require('jsonwebtoken');
 const jwtSecret = 'dev_secret';
-const logger = require('logger');
 
 module.exports.createAuthToken = (agreementId) => {
     const payload = { agreementId };
@@ -15,7 +14,7 @@ module.exports.decodeToken = (token) => {
     try {
         res = jwt.verify(token, jwtSecret);
     } catch (err) {
-        logger.warn('Invalid json web token', err);
+        console.log('Invalid json web token', err);
     }
 
     return res;

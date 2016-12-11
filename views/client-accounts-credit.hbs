@@ -45,8 +45,8 @@
                   </div>
                   <div class="modal-body" style="min-height: 65px;">
                     <div class="col-md-12">
-                      <form action="/credits/login" method="post">
-                        <input type="hidden" name="id" value={{this.idagreement_credit}} />
+                      <form action="/credits/login" method="post" class="creditLogin">
+                        <input type="hidden" name="id" value={{this.agreement}} />
                         <div class="col-md-5">
                           <input type="password" class="form-control" name="pin" minlength="4" maxlength="4" pattern="[0-9]{4}" required>
                         </div>

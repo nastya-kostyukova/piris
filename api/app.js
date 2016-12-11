@@ -48,38 +48,91 @@ app.use(body());
 
 
 // MySQL connection pool TODO: how to catch connection exception eg invalid password?
-const config = require('./config/db-'+app.env+'.json');
+const config = require('../config/db-'+app.env+'.json');
 global.connectionPool = mysql.createPool(config.db); // put in global to pass to sub-apps
 
 
-// select sub-app (admin/api) according to host subdomain (could also be by analysing request.url);
-app.use(function* subApp(next) {
-    /* eslint no-unused-vars:off *//* retain the 'next' signature */
-    // use subdomain to determine which app to serve: www. as default, or admin. or api
-    const subapp = this.hostname.split('.')[0]; // subdomain = part before first '.' of hostname
+const bodyParser = require('koa-bodyparser');
+const handlebars = require('koa-handlebars');
+const jwt        = require('koa-jwt');
+const jwtSecret  = 'dev_secret';
 
-    switch (subapp) {
-        // case 'admin':
-        //     yield compose(require('./apps/admin/app-admin.js').middleware);
-        //     break;
-        case 'api':
-            yield compose(require('./api/app-api.js').middleware);
-            break;
-        // case 'www':
-        //     yield compose(require('./apps/www/app-www.js').middleware);
-        //     break;
-        default: // no (recognised) subdomain? canonicalise host to www.host
-            // note switch must include all registered subdomains to avoid potential redirect loop
-            this.redirect(this.protocol+'://'+'www.'+this.host+this.path+this.search);
-            break;
+
+app.use(bodyParser());
+
+app.use(handlebars({
+    defaultLayout: 'layout',
+    helpers: {
+        if_eq: (a, b, opts) => (a == b) ? opts.fn(this) : opts.inverse(this),
+    },
+}));
+
+// set up MySQL connection
+app.use(function* mysqlConnection(next) {
+    // keep copy of this.db in global for access from models
+    this.db = global.db = yield global.connectionPool.getConnection();
+    // traditional mode ensures not null is respected for unsupplied fields, ensures valid JavaScript dates, etc
+    yield this.db.query('SET SESSION sql_mode = "TRADITIONAL"');
+
+    yield next;
+
+    this.db.release();
+});
+
+// // handle thrown or uncaught exceptions anywhere down the line
+app.use(function* handleErrors(next) {
+    try {
+        yield next;
+    } catch (e) {
+        switch (e.status) {
+            case 204: // No Content
+                this.status = e.status;
+                break;
+            case 401: // Unauthorized
+            case 403: // Forbidden
+            case 404: // Not Found
+            case 406: // Not Acceptable
+            case 409: // Conflict
+                this.status = e.status;
+                this.body = e.message;
+                this.response.body = e.message;
+                break;
+            default: // report 500 Internal Server Error
+                this.status = e.status || 500;
+                this.response.body = app.env=='development' ? e.stack : e.message;
+                this.app.emit('error', e, this); // github.com/koajs/examples/blob/master/errors/app.js
+        }
     }
 });
+
+// ------------ routing
+
+// public (unsecured) modules first
+
+app.use(require('./routes/root.js'));
+app.use(require('./routes/client.js'));
+app.use(require('./routes/deposit.js'));
+app.use(require('./routes/credit.js'));
+
+// // private routes
+app.use(jwt({ secret: jwtSecret }));
+app.use(require('./routes/credit-private.js'));
+/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -  */
+
+require('./cron.js').scheduleDay();
+require('./cron.js').scheduleMonth();
+
+require('./handlers/percents.js').subscribe();
+// require('./handlers/close.deposit.js').subscribe();
+require('./handlers/fund-development.js').subscribe();
+require('./handlers/credit-percent.js').subscribe();
+
 
 
 if (!module.parent) {
     /* eslint no-console:off */
     app.listen(process.env.PORT||3000);
-    const db = require('./config/db-'+app.env+'.json').db.database;
+    const db = require('../config/db-'+app.env+'.json').db.database;
     console.log(process.version+' listening on port '+(process.env.PORT||3000)+' ('+app.env+'/'+db+')');
 }
 

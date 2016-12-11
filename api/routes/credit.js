@@ -1,12 +1,11 @@
 'use strict';
 /*eslint-disable key-spacing*/
 const router       = require('koa-router')(); // router middleware for koa
-const Deposit       = require('../../models/deposit.js');
+const Deposit      = require('../../models/deposit.js');
 const Client       = require('../../models/client.js');
 const Credit       = require('../../models/credit.js');
 const moment       = require('moment');
-const jwt          = require('koa-jwt');
-const jwtSecret    = 'dev_secret';
+const authService  = require('../auth.service.js');
 
 router.get('/credits/cash', function*() {
     try {
@@ -112,8 +111,21 @@ router.post('/credits/sent-to-current', function * () {
     }
 });
 
-app.use(jwt({ secret: jwtSecret }));
-
+router.post('/credits/login', function * () {
+    try {
+        const data = this.request.body;
+        const checkPin = yield Credit.checkPin(data.id, data.pin);
+        if (checkPin) {
+            const token = authService.createAuthToken(data.id);
+            this.response.body = { token };
+            this.status = 201;
+        } else {
+            this.status = 403;
+        }
+    } catch (e) {
+        this.throw(e.status||500, e.message);
+    }
+});
 module.exports = router.middleware();
 
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -  */
