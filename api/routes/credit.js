@@ -5,6 +5,8 @@ const Deposit       = require('../../models/deposit.js');
 const Client       = require('../../models/client.js');
 const Credit       = require('../../models/credit.js');
 const moment       = require('moment');
+const jwt          = require('koa-jwt');
+const jwtSecret    = 'dev_secret';
 
 router.get('/credits/cash', function*() {
     try {
@@ -18,6 +20,16 @@ router.get('/credits/cash', function*() {
     }
 });
 
+router.get('/credits/get-credit', function *() {
+    try {
+        const client = yield Credit.getClient();
+        yield this.render('get_sum', {
+            client,
+        });
+    } catch(e) {
+        this.throw(e.status||500, e.message);
+    }
+});
 router.get('/credits/clients', function*() {
     try {
         const clients = yield Credit.getClientAccounts();
@@ -99,6 +111,9 @@ router.post('/credits/sent-to-current', function * () {
         this.throw(e.status||500, e.message);
     }
 });
+
+app.use(jwt({ secret: jwtSecret }));
+
 module.exports = router.middleware();
 
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -  */
