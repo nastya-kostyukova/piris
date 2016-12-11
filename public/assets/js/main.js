@@ -19,34 +19,16 @@ function checkStatus(response) {
     });
 }
 
-function sendPost(form, url, data) {
+function sendPost(form, url, data, type) {
     return fetch(url, {
-        method: 'post',
+        method: type || 'post',
         headers: {
             Accept: 'application/json',
             'Content-Type': 'application/json',
             Authorization: `Bearer ${$.cookie('token')}`,
+            cookie: document.cookie,
         },
         body: JSON.stringify(data),
-    })
-    .then(checkStatus)
-    .catch((error) => {
-        console.log(error);
-        const errorNode = document.getElementById('error');
-        errorNode.innerHTML = error.message;
-        errorNode.style.display = 'block';
-        throw error;
-    });
-}
-
-function sendGet(url) {
-    return fetch(url, {
-        method: 'get',
-        headers: {
-            Accept: 'application/json',
-            'Content-Type': 'application/json',
-            Authorization: `Bearer ${window.authToken}`,
-        },
     })
     .then(checkStatus)
     .catch((error) => {
@@ -151,6 +133,24 @@ function addCreditHandler(form) {
     }, true);
 }
 
+function getCreditMoneyHandler(form) {
+    form.addEventListener('submit', (e) => {
+        const dataToSend = {
+            sum: form.elements.sum.value,
+        };
+
+        e.stopPropagation();
+        e.preventDefault();
+        sendPost(form, '/credits/take-money',
+          dataToSend)
+          .then(() => {
+              setTimeout(() => {
+                  window.location.href = '/credits/account';
+              }, 500);
+          });
+    }, true);
+}
+
 function addGetMoneyHandler(form) {
     form.addEventListener('submit', (e) => {
         const dataToSend = {
@@ -178,10 +178,9 @@ function creditLoginHandler(form) {
         .then(response => response.json())
         .then((response) => {
             window.authToken = response.token;
-            sendGet('/credits/account');
             $(`#close${form.elements.id.value}`).modal('hide');
             $.cookie('token', response.token, { path: '/credits', expires: 7 });
-            window.location.href = '/credits/home';
+            window.location.href = '/credits/account';
         });
     }, true);
 }
@@ -215,18 +214,33 @@ function receivePercentHandler(form) {
     }, true);
 }
 
+function exithandler(button) {
+    button.addEventListener('click', (e) => {
+        $.removeCookie('token');
+        delete window.authToken;
+        e.stopPropagation();
+        e.preventDefault();
+        window.location.href = '/credits/clients';
+    }, true);
+}
+
 document.addEventListener('DOMContentLoaded', () => {
     const addClientForm = document.getElementById('addClient');
     const addDepositForm = document.getElementById('addDeposit');
     const addCreditForm = document.getElementById('addCredit');
+    const getCreditMoney = document.getElementById('getCreditMoney');
     const getMoney = document.getElementsByClassName('getMoney');
     const fromCash = document.getElementsByClassName('fromCash');
     const receivePercent = document.getElementsByClassName('receivePercent');
     const creditLogin = document.getElementsByClassName('creditLogin');
 
+    const exitButton = document.getElementById('exit');
+
+    if (exitButton) exithandler(exitButton);
     if (addClientForm) addClientHandler(addClientForm);
     if (addDepositForm) addDepositHandler(addDepositForm);
     if (addCreditForm) addCreditHandler(addCreditForm);
+    if (getCreditMoney) getCreditMoneyHandler(getCreditMoney);
     if (getMoney.length) {
         for(let i = 0; i < getMoney.length; i++) {
             addGetMoneyHandler(getMoney[i]);

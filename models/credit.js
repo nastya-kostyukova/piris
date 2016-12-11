@@ -44,6 +44,8 @@ const SQL_SELECT_CLIENT_CURRENT_WITH_AGREEMENT = 'SELECT c.account_number, a.sta
         'FROM bank.client_current_credit c ' +
         'JOIN agreement_credit a ON a.idagreement_credit=c.agreement ' +
         'JOIN credit_type t ON a.type=t.id';
+
+const SQL_SELECT_CLIENT_CURRENT = 'SELECT * FROM client_current_credit WHERE agreement=?';
 const SQL_GET_PIN = 'SELECT pin FROM agreement_credit WHERE idagreement_credit=?';
 
 const SQL_SELECT_CLIENT_PERCENT = 'SELECT * FROM client_percent_credit WHERE agreement=?';
@@ -409,6 +411,37 @@ Credit.getClient = function * (id) {
     try {
         const [clients] = yield global.db.query(SQL_SELECT_CLIENT_ACCOUNT_BY_ID, id);
         return clients[0];
+    } catch(e) {
+        switch (e.code) {
+            // recognised errors for Client.update - just use default MySQL messages for now
+            case 'ER_BAD_NULL_ERROR':
+            case 'ER_NO_REFERENCED_ROW_2':
+            case 'ER_NO_DEFAULT_FOR_FIELD':
+                throw ModelError(403, e.message); // Forbidden
+            case 'ER_DUP_ENTRY':
+                throw ModelError(409, e.message); // Conflict
+            default:
+                Lib.logException('Get clients accounts', e);
+                throw ModelError(500, e.message); // Internal Server Error
+        }
+    }
+};
+
+Credit.giveSum = function * (id, sum) {
+    try {
+        const [clients] = yield global.db.query(SQL_SELECT_CLIENT_CURRENT, id);
+        const client = clients[0];
+        console.log(client.balance);
+        console.log(sum);
+        if (client.balance >= sum) {
+            yield global.db.query(SQL_UPDATE_CLIENT_CURRENT,
+              [{
+                  balance: client.balance - sum,
+              }, id]);
+              return true;
+        } else {
+            return false;
+        }
     } catch(e) {
         switch (e.code) {
             // recognised errors for Client.update - just use default MySQL messages for now

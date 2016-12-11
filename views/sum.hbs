@@ -31,19 +31,20 @@
             </tr>
         </tbody>
     </table>
-    <form method="post" id="getCreditMoney" class="form-horizontal" style="margin-top:100px">
-          <div class="form-group">
-              <label class="col-sm-3">Сумма: *</label>
-              <div class="col-sm-5">
-                  <input class="form-control" type="text" placeholder="Сумма" name="get_sum" minlength="9" maxlength="13" pattern="[1-9][0-9]*" required/>
-              </div>
-              <div class="col-sm-4">
-                  <button type="submit" id="add" style="margin: 5px auto 0 auto" class="btn btn-info">Снять деньги</button>
-              </div>
-          </div>
-          <div id="success">
-          </div>
-          <div id="error">
-          </div>
-      </form>
+    <form method="post" action="/credits/take-money" id="getCreditMoney" class="form-horizontal" style="margin-top:100px">
+        <div class="form-group">
+            <label class="col-sm-3">Сумма: *</label>
+            <div class="col-sm-5">
+                <input class="form-control" type="text" placeholder="Сумма" name="sum" minlength="1" maxlength="13" pattern="[1-9][0-9]*" required/>
+            </div>
+            <div class="col-sm-4">
+                <button type="submit" id="add" style="margin: 5px auto 0 auto" class="btn btn-info">Снять деньги</button>
+            </div>
+        </div>
+        <div id="success">
+        </div>
+        <div id="error">
+        </div>
+    </form>
+    <button id="exit" style="margin: 5px auto 0 auto" class="btn btn-warning">Выход</button>
 </div>

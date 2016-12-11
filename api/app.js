@@ -12,40 +12,15 @@
 
 const koa          = require('koa');               // Koa framework
 const body         = require('koa-body');          // body parser
-const compose      = require('koa-compose');       // middleware composer
-const compress     = require('koa-compress');      // HTTP compression
-const responseTime = require('koa-response-time'); // X-Response-Time middleware
-const session      = require('koa-session');       // session for passport login, flash messages
 const mysql        = require('mysql-co');          // MySQL (co wrapper for mysql2)
 const serve        = require('koa-static');
-const cors         = require('koa-cors');
 
 const app = module.exports = koa();
 
 app.use(serve('public'));
 
-// return response time in X-Response-Time header
-app.use(responseTime());
-
-app.use(cors());
-// HTTP compression
-//app.use(compress({}));
-
-
-// only search-index www subdomain
-app.use(function* robots(next) {
-    yield next;
-    if (this.hostname.slice(0,3) != 'www') this.response.set('X-Robots-Tag', 'noindex, nofollow');
-});
-
-
 // parse request body into ctx.request.body
 app.use(body());
-
-
-// session for passport login, flash messages
-// app.keys = ['koa-sample-app'];
-// app.use(session(app));
 
 
 // MySQL connection pool TODO: how to catch connection exception eg invalid password?
@@ -127,8 +102,6 @@ require('./handlers/percents.js').subscribe();
 // require('./handlers/close.deposit.js').subscribe();
 require('./handlers/fund-development.js').subscribe();
 require('./handlers/credit-percent.js').subscribe();
-
-
 
 if (!module.parent) {
     /* eslint no-console:off */

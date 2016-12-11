@@ -118,7 +118,6 @@ router.post('/credits/login', function * () {
         if (checkPin) {
             const token = authService.createAuthToken(data.id);
             this.response.body = { token };
-
             this.status = 201;
         } else {
             this.status = 403;
