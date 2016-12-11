@@ -30,6 +30,15 @@ const SQL_SELECT_CLIENT_ACCOUNTS = 'SELECT p.account_number as p_account_number,
         'FROM client_current_credit c ' +
         'JOIN client_percent_credit p ON c.agreement = p.agreement';
 
+const SQL_SELECT_CLIENT_ACCOUNT_BY_ID = 'SELECT p.account_number as p_account_number, ' +
+        'p.active_type as p_active_type, p.agreement, ' +
+        'p.balance as p_balance, p.name as p_name, ' +
+        'c.account_number as c_account_number, c.active_type as c_active_type, ' +
+        'c.balance as c_balance, c.name as c_name ' +
+        'FROM client_current_credit c ' +
+        'JOIN client_percent_credit p ON c.agreement = p.agreement ' +
+        'WHERE c.agreement=?';
+
 const SQL_SELECT_CLIENT_CURRENT_WITH_AGREEMENT = 'SELECT c.account_number, a.start, a.end, t.fullInEnd as type_p,' +
         ' a.duration, a.sum, c.agreement, t.percent, t.duration_min, t.duration_max ' +
         'FROM bank.client_current_credit c ' +
@@ -393,6 +402,25 @@ Credit.selectClientPercent = function * (id) {
 Credit.checkPin = function* (id, receivePin) {
     const [agreements] = yield global.db.query(SQL_GET_PIN, id);
     const pin = agreements[0].pin;
-    console.log(pin);
     return (+pin === +receivePin);
+};
+
+Credit.getClient = function * (id) {
+    try {
+        const [clients] = yield global.db.query(SQL_SELECT_CLIENT_ACCOUNT_BY_ID, id);
+        return clients[0];
+    } catch(e) {
+        switch (e.code) {
+            // recognised errors for Client.update - just use default MySQL messages for now
+            case 'ER_BAD_NULL_ERROR':
+            case 'ER_NO_REFERENCED_ROW_2':
+            case 'ER_NO_DEFAULT_FOR_FIELD':
+                throw ModelError(403, e.message); // Forbidden
+            case 'ER_DUP_ENTRY':
+                throw ModelError(409, e.message); // Conflict
+            default:
+                Lib.logException('Get clients accounts', e);
+                throw ModelError(500, e.message); // Internal Server Error
+        }
+    }
 };

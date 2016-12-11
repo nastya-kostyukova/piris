@@ -4,7 +4,7 @@ const jwt = require('jsonwebtoken');
 const jwtSecret = 'dev_secret';
 
 module.exports.createAuthToken = (agreementId) => {
-    const payload = { agreementId };
+    const payload = { id: agreementId };
     return jwt.sign(payload, jwtSecret, {});
 };
 

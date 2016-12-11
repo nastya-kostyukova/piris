@@ -19,6 +19,7 @@ const session      = require('koa-session');       // session for passport login
 const mysql        = require('mysql-co');          // MySQL (co wrapper for mysql2)
 const serve        = require('koa-static');
 const cors         = require('koa-cors');
+
 const app = module.exports = koa();
 
 app.use(serve('public'));
@@ -26,7 +27,7 @@ app.use(serve('public'));
 // return response time in X-Response-Time header
 app.use(responseTime());
 
-//app.use(cors());
+app.use(cors());
 // HTTP compression
 //app.use(compress({}));
 
@@ -115,7 +116,7 @@ app.use(require('./routes/deposit.js'));
 app.use(require('./routes/credit.js'));
 
 // // private routes
-app.use(jwt({ secret: jwtSecret }));
+// app.use(jwt({ secret: jwtSecret }));
 app.use(require('./routes/credit-private.js'));
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -  */
 

@@ -95,7 +95,7 @@ router.post('/credits/add', function*() {
         const insert = yield Credit.createAccounts(data);
         this.request.body = { id: insert };
 
-        this.redirect('/credits/cash/');
+        this.response.redirect('/credits/cash/');
     } catch (e) {
         this.throw(e.status||500, e.message);
     }
@@ -118,6 +118,7 @@ router.post('/credits/login', function * () {
         if (checkPin) {
             const token = authService.createAuthToken(data.id);
             this.response.body = { token };
+
             this.status = 201;
         } else {
             this.status = 403;
@@ -126,6 +127,7 @@ router.post('/credits/login', function * () {
         this.throw(e.status||500, e.message);
     }
 });
+
 module.exports = router.middleware();
 
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -  */

@@ -25,7 +25,7 @@ function sendPost(form, url, data) {
         headers: {
             Accept: 'application/json',
             'Content-Type': 'application/json',
-            Authorization: `Bearer ${window.authToken}`,
+            Authorization: `Bearer ${$.cookie('token')}`,
         },
         body: JSON.stringify(data),
     })
@@ -179,6 +179,9 @@ function creditLoginHandler(form) {
         .then((response) => {
             window.authToken = response.token;
             sendGet('/credits/account');
+            $(`#close${form.elements.id.value}`).modal('hide');
+            $.cookie('token', response.token, { path: '/credits', expires: 7 });
+            window.location.href = '/credits/home';
         });
     }, true);
 }
