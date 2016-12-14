@@ -7,6 +7,7 @@ const co = require('co');
 function sendMoney() {
     return co(function* sendInBackground() {
         const users = yield Deposit.getAllClientCurrent();
+        console.log('fund development', users.length);
         if (users && users.length) {
             const fund_development = yield Deposit.getFundDevelopent();
             const accountsId = [];
